@@ -75,8 +75,10 @@ function buildScatterPlotSvg(count, points) {
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
 
-  const maxX = Math.max(1, ...points.map((p) => p.sourceGzipKB)) * 1.1;
-  const maxY = Math.max(1, ...points.map((p) => p.deltaKB)) * 1.1;
+  // Keep both axes on the same scale so the 1:1 line is visually accurate.
+  const unifiedMax = Math.max(1, ...points.flatMap((p) => [p.sourceGzipKB, p.deltaKB])) * 1.1;
+  const maxX = unifiedMax;
+  const maxY = unifiedMax;
   const tickCount = 5;
 
   const x = (value) => margin.left + (value / maxX) * plotWidth;
@@ -120,6 +122,8 @@ function buildScatterPlotSvg(count, points) {
     gridY,
     `<line x1="${margin.left}" y1="${margin.top + plotHeight}" x2="${margin.left + plotWidth}" y2="${margin.top + plotHeight}" stroke="#111827" stroke-width="1.5"/>`,
     `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + plotHeight}" stroke="#111827" stroke-width="1.5"/>`,
+    `<line x1="${x(0).toFixed(2)}" y1="${y(0).toFixed(2)}" x2="${x(unifiedMax).toFixed(2)}" y2="${y(unifiedMax).toFixed(2)}" stroke="#6b7280" stroke-width="2" stroke-dasharray="7 6"/>`,
+    `<text x="${(x(unifiedMax) - 8).toFixed(2)}" y="${(y(unifiedMax) + 18).toFixed(2)}" text-anchor="end" font-size="12" fill="#4b5563">Ideal 1:1 Ratio</text>`,
     tickLabelsX,
     tickLabelsY,
     `<text x="${margin.left + plotWidth / 2}" y="${height - 6}" text-anchor="middle" font-size="13" fill="#111827">Source Gzip (KB)</text>`,

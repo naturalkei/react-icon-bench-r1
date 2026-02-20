@@ -28,6 +28,24 @@ function buildBaseScenario(count) {
   return `'use client';\n\nexport function BaseScenario${count}() {\n  return (\n    <div className="icon-grid">\n      {Array.from({ length: ${count} }, (_, i) => (\n        <div key={i} className="icon-cell">\n          <span className="placeholder">item-{i + 1}</span>\n        </div>\n      ))}\n    </div>\n  );\n}\n`;
 }
 
+function buildLucideAliasMap() {
+  const map = new Map();
+  const src = read('node_modules/lucide-react/dist/esm/lucide-react.js');
+  const re = /export \{([^}]+)\} from '\.\/icons\/([^']+)\.js';/g;
+  for (const match of src.matchAll(re)) {
+    const exportsPart = match[1];
+    const iconFile = match[2];
+    const absPath = path.join(root, 'node_modules/lucide-react/dist/esm/icons', `${iconFile}.js`);
+    for (const token of exportsPart.split(',')) {
+      const clean = token.trim();
+      const m = clean.match(/^default as (\w+)$/);
+      if (m) map.set(m[1], absPath);
+    }
+  }
+  return map;
+}
+
+const lucideAliasMap = buildLucideAliasMap();
 const lucideAll = uniq(Array.from(read('node_modules/lucide-react/dist/lucide-react.d.ts').matchAll(/declare const (\w+):/g), (m) => m[1]));
 
 const heroiconsAll = fs
@@ -52,6 +70,12 @@ const iconifyAll = fs
   .map((f) => f.replace(/\.js$/, ''))
   .filter((name) => /^[a-z]/.test(name))
   .sort();
+
+const manifest = {
+  generatedAt: new Date().toISOString(),
+  counts,
+  scenarios: {},
+};
 
 for (const count of counts) {
   const lucideNames = ensureCount(lucideAll, 'lucide', count);
@@ -95,6 +119,38 @@ for (const count of counts) {
     `react-icons-${count}`,
     `'use client';\n\nimport { ${reactIconsNames.join(', ')} } from 'react-icons/fa';\n\nconst icons = [${reactIconsNames.join(', ')}];\n\nexport function ReactIconsScenario${count}() {\n  return (\n    <div className="icon-grid">\n      {icons.map((Icon, idx) => (\n        <div key={idx} className="icon-cell"><Icon size={20} /></div>\n      ))}\n    </div>\n  );\n}\n`,
   );
+
+  manifest.scenarios[String(count)] = {
+    base: {
+      iconCount: count,
+      sourceModules: [],
+    },
+    lucide: {
+      iconCount: count,
+      sourceModules: uniq(lucideNames.map((name) => lucideAliasMap.get(name)).filter(Boolean)),
+    },
+    heroicons: {
+      iconCount: count,
+      sourceModules: heroiconNames.map((name) => path.join(root, 'node_modules/@heroicons/react/24/outline', `${name}.js`)),
+    },
+    radix: {
+      iconCount: count,
+      sourceModules: [path.join(root, 'node_modules/@radix-ui/react-icons/dist/react-icons.esm.js')],
+    },
+    phosphor: {
+      iconCount: count,
+      sourceModules: phosphorNames.map((name) => path.join(root, 'node_modules/@phosphor-icons/react/dist/csr', `${name}.es.js`)),
+    },
+    iconify: {
+      iconCount: count,
+      sourceModules: iconifyFiles.map((name) => path.join(root, 'node_modules/@iconify-icons/mdi', `${name}.js`)),
+    },
+    'react-icons': {
+      iconCount: count,
+      sourceModules: [path.join(root, 'node_modules/react-icons/fa/index.mjs')],
+    },
+  };
 }
 
+fs.writeFileSync(path.join(root, 'benchmark-scenario-manifest.json'), JSON.stringify(manifest, null, 2), 'utf8');
 console.log('Generated scenarios with 50/100/200 icons each.');

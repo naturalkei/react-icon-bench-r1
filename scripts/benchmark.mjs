@@ -69,11 +69,14 @@ function escapeXml(text) {
 }
 
 function buildScatterPlotSvg(count, points) {
-  const width = 860;
-  const height = 520;
-  const margin = { top: 50, right: 36, bottom: 70, left: 90 };
-  const plotWidth = width - margin.left - margin.right;
-  const plotHeight = height - margin.top - margin.bottom;
+  const width = 720;
+  const height = 720;
+  const margin = { top: 70, right: 60, bottom: 90, left: 100 };
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
+  const plotSize = Math.min(innerWidth, innerHeight);
+  const plotLeft = margin.left + (innerWidth - plotSize) / 2;
+  const plotTop = margin.top + (innerHeight - plotSize) / 2;
 
   // Keep both axes on the same scale so the 1:1 line is visually accurate.
   const unifiedMax = Math.max(1, ...points.flatMap((p) => [p.sourceGzipKB, p.deltaKB])) * 1.1;
@@ -81,24 +84,24 @@ function buildScatterPlotSvg(count, points) {
   const maxY = unifiedMax;
   const tickCount = 5;
 
-  const x = (value) => margin.left + (value / maxX) * plotWidth;
-  const y = (value) => margin.top + plotHeight - (value / maxY) * plotHeight;
+  const x = (value) => plotLeft + (value / maxX) * plotSize;
+  const y = (value) => plotTop + plotSize - (value / maxY) * plotSize;
 
   const xTicks = Array.from({ length: tickCount + 1 }, (_, i) => (maxX * i) / tickCount);
   const yTicks = Array.from({ length: tickCount + 1 }, (_, i) => (maxY * i) / tickCount);
 
   const gridX = xTicks
-    .map((tick) => `<line x1="${x(tick).toFixed(2)}" y1="${margin.top}" x2="${x(tick).toFixed(2)}" y2="${margin.top + plotHeight}" stroke="#e5e7eb" stroke-width="1"/>`)
+    .map((tick) => `<line x1="${x(tick).toFixed(2)}" y1="${plotTop}" x2="${x(tick).toFixed(2)}" y2="${plotTop + plotSize}" stroke="#e5e7eb" stroke-width="1"/>`)
     .join('');
   const gridY = yTicks
-    .map((tick) => `<line x1="${margin.left}" y1="${y(tick).toFixed(2)}" x2="${margin.left + plotWidth}" y2="${y(tick).toFixed(2)}" stroke="#e5e7eb" stroke-width="1"/>`)
+    .map((tick) => `<line x1="${plotLeft}" y1="${y(tick).toFixed(2)}" x2="${plotLeft + plotSize}" y2="${y(tick).toFixed(2)}" stroke="#e5e7eb" stroke-width="1"/>`)
     .join('');
 
   const tickLabelsX = xTicks
     .map((tick) => `<text x="${x(tick).toFixed(2)}" y="${height - 28}" text-anchor="middle" font-size="12" fill="#374151">${tick.toFixed(1)}</text>`)
     .join('');
   const tickLabelsY = yTicks
-    .map((tick) => `<text x="${margin.left - 10}" y="${(y(tick) + 4).toFixed(2)}" text-anchor="end" font-size="12" fill="#374151">${tick.toFixed(1)}</text>`)
+    .map((tick) => `<text x="${plotLeft - 10}" y="${(y(tick) + 4).toFixed(2)}" text-anchor="end" font-size="12" fill="#374151">${tick.toFixed(1)}</text>`)
     .join('');
 
   const pointMarks = points
@@ -120,14 +123,14 @@ function buildScatterPlotSvg(count, points) {
     `<text x="${width / 2}" y="28" text-anchor="middle" font-size="18" fill="#111827">Scatter Plot (${count} icons): Bundle Delta vs Source Gzip</text>`,
     gridX,
     gridY,
-    `<line x1="${margin.left}" y1="${margin.top + plotHeight}" x2="${margin.left + plotWidth}" y2="${margin.top + plotHeight}" stroke="#111827" stroke-width="1.5"/>`,
-    `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + plotHeight}" stroke="#111827" stroke-width="1.5"/>`,
+    `<line x1="${plotLeft}" y1="${plotTop + plotSize}" x2="${plotLeft + plotSize}" y2="${plotTop + plotSize}" stroke="#111827" stroke-width="1.5"/>`,
+    `<line x1="${plotLeft}" y1="${plotTop}" x2="${plotLeft}" y2="${plotTop + plotSize}" stroke="#111827" stroke-width="1.5"/>`,
     `<line x1="${x(0).toFixed(2)}" y1="${y(0).toFixed(2)}" x2="${x(unifiedMax).toFixed(2)}" y2="${y(unifiedMax).toFixed(2)}" stroke="#6b7280" stroke-width="2" stroke-dasharray="7 6"/>`,
     `<text x="${(x(unifiedMax) - 8).toFixed(2)}" y="${(y(unifiedMax) + 18).toFixed(2)}" text-anchor="end" font-size="12" fill="#4b5563">Ideal 1:1 Ratio</text>`,
     tickLabelsX,
     tickLabelsY,
-    `<text x="${margin.left + plotWidth / 2}" y="${height - 6}" text-anchor="middle" font-size="13" fill="#111827">Source Gzip (KB)</text>`,
-    `<text x="20" y="${margin.top + plotHeight / 2}" text-anchor="middle" font-size="13" fill="#111827" transform="rotate(-90 20 ${margin.top + plotHeight / 2})">Bundle Delta vs Base (KB)</text>`,
+    `<text x="${plotLeft + plotSize / 2}" y="${height - 20}" text-anchor="middle" font-size="13" fill="#111827">Source Gzip (KB)</text>`,
+    `<text x="24" y="${plotTop + plotSize / 2}" text-anchor="middle" font-size="13" fill="#111827" transform="rotate(-90 24 ${plotTop + plotSize / 2})">Bundle Delta vs Base (KB)</text>`,
     pointMarks,
     '</svg>',
   ].join('');

@@ -1,5 +1,7 @@
 # react-icon-bench-r1
 
+This is the official benchmark repository for the Medium article: [The Hidden Bundle Cost of React Icons: Why Lucide Wins in 2026](https://medium.nkcroft.com/the-hidden-bundle-cost-of-react-icons-why-lucide-wins-in-2026-1ddb74c1a86c)
+
 Next.js 16 benchmark project that compares bundle impact of importing icons in a Client Component across:
 
 - lucide-react

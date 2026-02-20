@@ -5,7 +5,7 @@ Generated at: 2026-02-20T14:29:18.656Z
 Environment:
 - Next.js 16.1.6
 - React 19.2.3
-- Node.js v25.6.1
+- Node.js v24.12.0
 - Bundler: Turbopack (next build default in this setup)
 
 Method:

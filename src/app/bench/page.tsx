@@ -10,11 +10,10 @@ const links = [
   { href: '/bench/react-icons', label: 'react-icons' },
 ];
 
-export default function Home() {
+export default function BenchIndexPage() {
   return (
     <main className="page-wrap">
-      <h1>React Icon Bench R1</h1>
-      <p>50 icon imports per route benchmark in Next.js 16.</p>
+      <h1>Benchmark Routes</h1>
       <ul className="link-list">
         {links.map((link) => (
           <li key={link.href}>
@@ -22,9 +21,6 @@ export default function Home() {
           </li>
         ))}
       </ul>
-      <p>
-        Run <code>pnpm bench</code> to build and update benchmark results in README.
-      </p>
     </main>
   );
 }

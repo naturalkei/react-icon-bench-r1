@@ -1,13 +1,6 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #f7f8fa;
+  --foreground: #1a1f36;
 }
 
 html,
@@ -19,9 +12,10 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }
 
 * {
@@ -31,12 +25,53 @@ body {
 }
 
 a {
-  color: inherit;
+  color: #0b57d0;
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+.page-wrap {
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 40px 20px 56px;
+}
+
+.page-wrap h1 {
+  margin-bottom: 12px;
+  font-size: 30px;
+}
+
+.page-wrap p {
+  margin-bottom: 12px;
+}
+
+.link-list {
+  margin: 16px 0 24px;
+  padding-left: 18px;
+}
+
+.link-list li {
+  margin: 6px 0;
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.icon-cell {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d8dde8;
+  border-radius: 8px;
+  display: flex;
+  height: 48px;
+  justify-content: center;
+}
+
+.placeholder {
+  color: #5a6480;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
 }

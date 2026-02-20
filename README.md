@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# react-icon-bench-r1
 
-## Getting Started
+Next.js 16 benchmark project that compares bundle impact of importing **50 icons** in a Client Component across:
 
-First, run the development server:
+- lucide-react
+- @heroicons/react
+- @radix-ui/react-icons
+- @phosphor-icons/react
+- @iconify/react + @iconify-icons/mdi
+- react-icons
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm bench
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This command will:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Regenerate scenario components from package exports.
+2. Run `next build`.
+3. Measure gzip size of route-specific page chunk(s).
+4. Write `BENCHMARK_RESULTS.md`.
+5. Update the table below.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Routes
 
-## Learn More
+- `/bench/base`
+- `/bench/lucide`
+- `/bench/heroicons`
+- `/bench/radix`
+- `/bench/phosphor`
+- `/bench/iconify`
+- `/bench/react-icons`
 
-To learn more about Next.js, take a look at the following resources:
+## Latest Results
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+<!-- BENCHMARK_RESULTS_START -->
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Library | Route chunk gzip (KB) | Delta vs base (KB) |
+|---|---:|---:|
+| lucide | 167.97 | 3.66 |
+| heroicons | 166.30 | 1.99 |
+| radix | 174.44 | 10.13 |
+| phosphor | 196.73 | 32.42 |
+| iconify | 174.75 | 10.44 |
+| react-icons | 183.59 | 19.28 |
 
-## Deploy on Vercel
+Last updated: 2026-02-20T11:00:13.446Z
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+<!-- BENCHMARK_RESULTS_END -->

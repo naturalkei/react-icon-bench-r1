@@ -1,10 +1,5 @@
-import { PhosphorScenario } from '@/components/scenarios/phosphor';
+import { redirect } from 'next/navigation';
 
-export default function PhosphorBenchPage() {
-  return (
-    <main className="page-wrap">
-      <h1>Phosphor (50 icons)</h1>
-      <PhosphorScenario />
-    </main>
-  );
+export default function LegacyphosphorPage() {
+  redirect('/bench/50/phosphor');
 }

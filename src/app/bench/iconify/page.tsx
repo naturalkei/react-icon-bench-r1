@@ -1,10 +1,5 @@
-import { IconifyScenario } from '@/components/scenarios/iconify';
+import { redirect } from 'next/navigation';
 
-export default function IconifyBenchPage() {
-  return (
-    <main className="page-wrap">
-      <h1>Iconify (50 icons)</h1>
-      <IconifyScenario />
-    </main>
-  );
+export default function LegacyiconifyPage() {
+  redirect('/bench/50/iconify');
 }

@@ -1,10 +1,5 @@
-import { HeroiconsScenario } from '@/components/scenarios/heroicons';
+import { redirect } from 'next/navigation';
 
-export default function HeroiconsBenchPage() {
-  return (
-    <main className="page-wrap">
-      <h1>Heroicons (50 icons)</h1>
-      <HeroiconsScenario />
-    </main>
-  );
+export default function LegacyheroiconsPage() {
+  redirect('/bench/50/heroicons');
 }

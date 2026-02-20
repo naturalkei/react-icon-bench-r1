@@ -4,15 +4,16 @@ import path from 'node:path';
 import zlib from 'node:zlib';
 
 const root = process.cwd();
-const routes = ['base', 'lucide', 'heroicons', 'radix', 'phosphor', 'iconify', 'react-icons'];
+const counts = [50, 100, 200];
+const libraries = ['lucide', 'heroicons', 'radix', 'phosphor', 'iconify', 'react-icons'];
 
 function gzipSize(filePath) {
   const buf = fs.readFileSync(filePath);
   return zlib.gzipSync(buf).length;
 }
 
-function routeChunkFiles(route) {
-  const htmlPath = path.join(root, '.next/server/app/bench', `${route}.html`);
+function routeChunkFiles(routePath) {
+  const htmlPath = path.join(root, '.next/server/app/bench', `${routePath}.html`);
   if (!fs.existsSync(htmlPath)) return [];
   const html = fs.readFileSync(htmlPath, 'utf8');
   const matches = Array.from(html.matchAll(/\/_next\/static\/chunks\/([^"']+\.js)/g), (m) => m[1]);
@@ -33,29 +34,40 @@ console.log('Building Next.js app...');
 execSync('pnpm next build', { stdio: 'inherit' });
 
 const raw = {};
-for (const route of routes) {
-  const files = routeChunkFiles(route);
-  const size = files.reduce((sum, f) => sum + gzipSize(f), 0);
-  raw[route] = { files: files.map((f) => path.relative(root, f)), gzipBytes: size };
+for (const count of counts) {
+  raw[count] = {};
+  const allTargets = ['base', ...libraries];
+  for (const lib of allTargets) {
+    const routePath = `${count}/${lib}`;
+    const files = routeChunkFiles(routePath);
+    const size = files.reduce((sum, f) => sum + gzipSize(f), 0);
+    raw[count][lib] = {
+      route: `/bench/${routePath}`,
+      files: files.map((f) => path.relative(root, f)),
+      gzipBytes: size,
+    };
+  }
 }
 
-const baseline = raw.base.gzipBytes;
-const rows = routes.filter((r) => r !== 'base').map((route) => {
-  const bytes = raw[route].gzipBytes;
-  return {
-    route,
-    pageGzipKB: kb(bytes),
-    deltaKB: kb(bytes - baseline),
-  };
-});
-
 const generatedAt = new Date().toISOString();
+const tableSections = [];
 
-const table = [
-  '| Library | Route chunk gzip (KB) | Delta vs base (KB) |',
-  '|---|---:|---:|',
-  ...rows.map((r) => `| ${r.route} | ${r.pageGzipKB} | ${r.deltaKB} |`),
-].join('\n');
+for (const count of counts) {
+  const baseline = raw[count].base.gzipBytes;
+  const rows = libraries.map((lib) => {
+    const bytes = raw[count][lib].gzipBytes;
+    return `| ${lib} | ${kb(bytes)} | ${kb(bytes - baseline)} |`;
+  });
+  tableSections.push([
+    `### ${count} Icons`,
+    '',
+    '| Library | Route chunk gzip (KB) | Delta vs base (KB) |',
+    '|---|---:|---:|',
+    ...rows,
+  ].join('\n'));
+}
+
+const combinedTables = tableSections.join('\n\n');
 
 const resultsDoc = [
   '# Benchmark Results',
@@ -69,13 +81,13 @@ const resultsDoc = [
   '- Bundler: Turbopack (next build default in this setup)',
   '',
   'Method:',
-  '- One route per library with 50 static icon imports in a Client Component',
-  '- Baseline route renders 50 non-icon placeholders',
+  '- Per count (50/100/200), one route per library with static icon imports in a Client Component',
+  '- Baseline route renders same count of non-icon placeholders',
   '- Metric = gzip size of JS chunks referenced by each prerendered route HTML',
   '',
-  table,
+  combinedTables,
   '',
-  'Raw files by route:',
+  'Raw files by count and route:',
   '```json',
   JSON.stringify(raw, null, 2),
   '```',
@@ -88,7 +100,7 @@ const readmePath = path.join(root, 'README.md');
 const readme = fs.readFileSync(readmePath, 'utf8');
 const start = '<!-- BENCHMARK_RESULTS_START -->';
 const end = '<!-- BENCHMARK_RESULTS_END -->';
-const replacement = `${start}\n\n${table}\n\nLast updated: ${generatedAt}\n\n${end}`;
+const replacement = `${start}\n\n${combinedTables}\n\nLast updated: ${generatedAt}\n\n${end}`;
 
 let nextReadme;
 if (readme.includes(start) && readme.includes(end)) {

@@ -1,10 +1,5 @@
-import { LucideScenario } from '@/components/scenarios/lucide';
+import { redirect } from 'next/navigation';
 
-export default function LucideBenchPage() {
-  return (
-    <main className="page-wrap">
-      <h1>Lucide (50 icons)</h1>
-      <LucideScenario />
-    </main>
-  );
+export default function LegacylucidePage() {
+  redirect('/bench/50/lucide');
 }

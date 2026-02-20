@@ -54,7 +54,7 @@ import icon49 from '@iconify-icons/mdi/account-badge-horizontal.js';
 
 const icons = [icon0, icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, icon9, icon10, icon11, icon12, icon13, icon14, icon15, icon16, icon17, icon18, icon19, icon20, icon21, icon22, icon23, icon24, icon25, icon26, icon27, icon28, icon29, icon30, icon31, icon32, icon33, icon34, icon35, icon36, icon37, icon38, icon39, icon40, icon41, icon42, icon43, icon44, icon45, icon46, icon47, icon48, icon49];
 
-export function IconifyScenario() {
+export function IconifyScenario50() {
   return (
     <div className="icon-grid">
       {icons.map((iconData, idx) => (

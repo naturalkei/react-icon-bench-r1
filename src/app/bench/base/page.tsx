@@ -1,10 +1,5 @@
-import { BaseScenario } from '@/components/scenarios/base';
+import { redirect } from 'next/navigation';
 
-export default function BaseBenchPage() {
-  return (
-    <main className="page-wrap">
-      <h1>Base Scenario</h1>
-      <BaseScenario />
-    </main>
-  );
+export default function LegacybasePage() {
+  redirect('/bench/50/base');
 }

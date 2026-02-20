@@ -86,6 +86,6 @@ Each scenario contains:
 | iconify | 200 | 86.56 | 15.89 | 26.13 | 133.8 | 1.64x |
 | react-icons | 1 | 1333.08 | 418.85 | 81.82 | 418.9 | 0.20x |
 
-Last updated: 2026-02-20T14:29:18.656Z
+Last updated: 2026-02-20T15:03:26.356Z
 
 <!-- BENCHMARK_RESULTS_END -->

@@ -1,11 +1,11 @@
 # Benchmark Results
 
-Generated at: 2026-02-20T14:29:18.656Z
+Generated at: 2026-02-20T15:03:26.356Z
 
 Environment:
 - Next.js 16.1.6
 - React 19.2.3
-- Node.js v24.12.0
+- Node.js v25.6.1
 - Bundler: Turbopack (next build default in this setup)
 
 Method:
@@ -25,6 +25,8 @@ Method:
 | iconify | 50 | 20.00 | 3.93 | 11.53 | 236.0 | 2.93x |
 | react-icons | 1 | 1333.08 | 418.85 | 81.07 | 1660.2 | 0.19x |
 
+![Scatter plot for 50 icons (x: Source Gzip KB, y: Bundle Delta KB)](benchmark-plots/scatter-50.svg)
+
 ### 100 Icons
 
 | Library | Source modules | Source raw (KB) | Source gzip (KB) | Bundle delta vs base (KB) | Delta/icon (B) | Delta/Source(gzip) |
@@ -36,6 +38,8 @@ Method:
 | iconify | 100 | 41.71 | 8.66 | 17.67 | 181.0 | 2.04x |
 | react-icons | 1 | 1333.08 | 418.85 | 81.34 | 832.9 | 0.19x |
 
+![Scatter plot for 100 icons (x: Source Gzip KB, y: Bundle Delta KB)](benchmark-plots/scatter-100.svg)
+
 ### 200 Icons
 
 | Library | Source modules | Source raw (KB) | Source gzip (KB) | Bundle delta vs base (KB) | Delta/icon (B) | Delta/Source(gzip) |
@@ -46,6 +50,8 @@ Method:
 | phosphor | 200 | 62.75 | 5.66 | 102.27 | 523.6 | 18.06x |
 | iconify | 200 | 86.56 | 15.89 | 26.13 | 133.8 | 1.64x |
 | react-icons | 1 | 1333.08 | 418.85 | 81.82 | 418.9 | 0.20x |
+
+![Scatter plot for 200 icons (x: Source Gzip KB, y: Bundle Delta KB)](benchmark-plots/scatter-200.svg)
 
 Raw files by count and route:
 ```json

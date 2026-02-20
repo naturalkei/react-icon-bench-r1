@@ -6,6 +6,14 @@ import zlib from 'node:zlib';
 const root = process.cwd();
 const counts = [50, 100, 200];
 const libraries = ['lucide', 'heroicons', 'radix', 'phosphor', 'iconify', 'react-icons'];
+const colors = {
+  lucide: '#1f77b4',
+  heroicons: '#ff7f0e',
+  radix: '#2ca02c',
+  phosphor: '#d62728',
+  iconify: '#9467bd',
+  'react-icons': '#8c564b',
+};
 
 function gzipSizeBytes(buf) {
   return zlib.gzipSync(buf).length;
@@ -51,6 +59,76 @@ function perIconBytes(bytes, iconCount) {
   return (bytes / iconCount).toFixed(1);
 }
 
+function escapeXml(text) {
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
+}
+
+function buildScatterPlotSvg(count, points) {
+  const width = 860;
+  const height = 520;
+  const margin = { top: 50, right: 36, bottom: 70, left: 90 };
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+
+  const maxX = Math.max(1, ...points.map((p) => p.sourceGzipKB)) * 1.1;
+  const maxY = Math.max(1, ...points.map((p) => p.deltaKB)) * 1.1;
+  const tickCount = 5;
+
+  const x = (value) => margin.left + (value / maxX) * plotWidth;
+  const y = (value) => margin.top + plotHeight - (value / maxY) * plotHeight;
+
+  const xTicks = Array.from({ length: tickCount + 1 }, (_, i) => (maxX * i) / tickCount);
+  const yTicks = Array.from({ length: tickCount + 1 }, (_, i) => (maxY * i) / tickCount);
+
+  const gridX = xTicks
+    .map((tick) => `<line x1="${x(tick).toFixed(2)}" y1="${margin.top}" x2="${x(tick).toFixed(2)}" y2="${margin.top + plotHeight}" stroke="#e5e7eb" stroke-width="1"/>`)
+    .join('');
+  const gridY = yTicks
+    .map((tick) => `<line x1="${margin.left}" y1="${y(tick).toFixed(2)}" x2="${margin.left + plotWidth}" y2="${y(tick).toFixed(2)}" stroke="#e5e7eb" stroke-width="1"/>`)
+    .join('');
+
+  const tickLabelsX = xTicks
+    .map((tick) => `<text x="${x(tick).toFixed(2)}" y="${height - 28}" text-anchor="middle" font-size="12" fill="#374151">${tick.toFixed(1)}</text>`)
+    .join('');
+  const tickLabelsY = yTicks
+    .map((tick) => `<text x="${margin.left - 10}" y="${(y(tick) + 4).toFixed(2)}" text-anchor="end" font-size="12" fill="#374151">${tick.toFixed(1)}</text>`)
+    .join('');
+
+  const pointMarks = points
+    .map((p) => {
+      const cx = x(p.sourceGzipKB).toFixed(2);
+      const cy = y(p.deltaKB).toFixed(2);
+      const label = escapeXml(`${p.lib} (${p.sourceGzipKB.toFixed(2)}, ${p.deltaKB.toFixed(2)})`);
+      const color = colors[p.lib] || '#111827';
+      return [
+        `<circle cx="${cx}" cy="${cy}" r="7" fill="${color}" opacity="0.9"/>`,
+        `<text x="${(Number(cx) + 10).toFixed(2)}" y="${(Number(cy) - 10).toFixed(2)}" font-size="12" fill="#111827">${label}</text>`,
+      ].join('');
+    })
+    .join('');
+
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Scatter plot for ${count} icons">`,
+    `<rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff"/>`,
+    `<text x="${width / 2}" y="28" text-anchor="middle" font-size="18" fill="#111827">Scatter Plot (${count} icons): Bundle Delta vs Source Gzip</text>`,
+    gridX,
+    gridY,
+    `<line x1="${margin.left}" y1="${margin.top + plotHeight}" x2="${margin.left + plotWidth}" y2="${margin.top + plotHeight}" stroke="#111827" stroke-width="1.5"/>`,
+    `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + plotHeight}" stroke="#111827" stroke-width="1.5"/>`,
+    tickLabelsX,
+    tickLabelsY,
+    `<text x="${margin.left + plotWidth / 2}" y="${height - 6}" text-anchor="middle" font-size="13" fill="#111827">Source Gzip (KB)</text>`,
+    `<text x="20" y="${margin.top + plotHeight / 2}" text-anchor="middle" font-size="13" fill="#111827" transform="rotate(-90 20 ${margin.top + plotHeight / 2})">Bundle Delta vs Base (KB)</text>`,
+    pointMarks,
+    '</svg>',
+  ].join('');
+}
+
 console.log('Generating scenarios...');
 execSync('node scripts/generate-scenarios.mjs', { stdio: 'inherit' });
 
@@ -82,6 +160,9 @@ for (const count of counts) {
 
 const generatedAt = new Date().toISOString();
 const tableSections = [];
+const tableSectionsWithPlots = [];
+const plotsDir = path.join(root, 'benchmark-plots');
+fs.mkdirSync(plotsDir, { recursive: true });
 
 for (const count of counts) {
   const baseline = raw[count].base.bundleGzipBytes;
@@ -90,16 +171,35 @@ for (const count of counts) {
     const delta = item.bundleGzipBytes - baseline;
     return `| ${lib} | ${item.source.moduleCount} | ${kb(item.source.rawBytes)} | ${kb(item.source.gzipBytes)} | ${kb(delta)} | ${perIconBytes(delta, item.iconCount)} | ${ratio(delta, item.source.gzipBytes)}x |`;
   });
-  tableSections.push([
+  const points = libraries.map((lib) => {
+    const item = raw[count][lib];
+    const delta = item.bundleGzipBytes - baseline;
+    return {
+      lib,
+      sourceGzipKB: item.source.gzipBytes / 1024,
+      deltaKB: delta / 1024,
+    };
+  });
+  const plotRelPath = `benchmark-plots/scatter-${count}.svg`;
+  fs.writeFileSync(path.join(root, plotRelPath), buildScatterPlotSvg(count, points), 'utf8');
+
+  const tableBlock = [
     `### ${count} Icons`,
     '',
     '| Library | Source modules | Source raw (KB) | Source gzip (KB) | Bundle delta vs base (KB) | Delta/icon (B) | Delta/Source(gzip) |',
     '|---|---:|---:|---:|---:|---:|---:|',
     ...rows,
+  ].join('\n');
+  tableSections.push(tableBlock);
+  tableSectionsWithPlots.push([
+    tableBlock,
+    '',
+    `![Scatter plot for ${count} icons (x: Source Gzip KB, y: Bundle Delta KB)](${plotRelPath})`,
   ].join('\n'));
 }
 
 const combinedTables = tableSections.join('\n\n');
+const combinedTablesWithPlots = tableSectionsWithPlots.join('\n\n');
 
 const resultsDoc = [
   '# Benchmark Results',
@@ -118,7 +218,7 @@ const resultsDoc = [
   '- Bundle metric = gzip size of JS chunks referenced by each prerendered route HTML',
   '- Source metric = total raw/gzip size of icon source modules selected by each scenario',
   '',
-  combinedTables,
+  combinedTablesWithPlots,
   '',
   'Raw files by count and route:',
   '```json',
